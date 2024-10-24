@@ -1,7 +1,8 @@
 from datetime import datetime
-from django.db.models import Count, F, Q
+from django.db.models import F, Count
 from rest_framework import viewsets
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 from cinema.models import Genre, Actor, CinemaHall, Movie, MovieSession, Order
 
@@ -77,9 +78,10 @@ class MovieSessionViewSet(viewsets.ModelViewSet):
         MovieSession.objects.all()
         .select_related("movie", "cinema_hall")
         .annotate(
-            tickets_available=F("cinema_hall__rows")
-            * F("cinema_hall__seats_in_row")
-            - Count("tickets", filter=Q(tickets__is_confirmed=True))
+            total_capacity=F("cinema_hall__rows")
+            * F("cinema_hall__seats_in_row"),
+            total_tickets=Count("tickets"),
+            tickets_available=F("total_capacity") - F("total_tickets")
         )
     )
     serializer_class = MovieSessionSerializer
@@ -114,6 +116,8 @@ class OrderPagination(PageNumberPagination):
 
 
 class OrderViewSet(viewsets.ModelViewSet):
+    serializer_class = OrderSerializer
+    permission_classes = (IsAuthenticatedOrReadOnly,)
     queryset = Order.objects.prefetch_related(
         "tickets__movie_session__movie", "tickets__movie_session__cinema_hall"
     )
