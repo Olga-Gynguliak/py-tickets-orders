@@ -63,9 +63,7 @@ class MovieSession(models.Model):
 
 class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE
-    )
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     def __str__(self):
         return str(self.created_at)
@@ -78,16 +76,16 @@ class Ticket(models.Model):
     movie_session = models.ForeignKey(
         MovieSession, on_delete=models.CASCADE, related_name="tickets"
     )
-    order = models.ForeignKey(
-        Order, on_delete=models.CASCADE, related_name="tickets"
-    )
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="tickets")
     row = models.IntegerField()
     seat = models.IntegerField()
 
     @staticmethod
     def validate_ticket(row, seat, cinema_hall, error_to_raise):
         for ticket_attr_value, ticket_attr_name, cinema_hall_attr_name in [
-                (row, "row", "rows"), (seat, "seat", "seats_in_row")]:
+            (row, "row", "rows"),
+            (seat, "seat", "seats_in_row"),
+        ]:
             count_attrs = getattr(cinema_hall, cinema_hall_attr_name)
             if not (1 <= ticket_attr_value <= count_attrs):
                 raise error_to_raise(
@@ -108,11 +106,11 @@ class Ticket(models.Model):
         )
 
     def save(
-            self,
-            force_insert=False,
-            force_update=False,
-            using=None,
-            update_fields=None,
+        self,
+        force_insert=False,
+        force_update=False,
+        using=None,
+        update_fields=None,
     ):
         self.full_clean()
         return super(Ticket, self).save(
@@ -120,9 +118,11 @@ class Ticket(models.Model):
         )
 
     def __str__(self):
-        return (f"{str(self.movie_session)}"
-                f"(row: {str(self.row)}, seat: {str(self.seat)})")
+        return (
+            f"{str(self.movie_session)}"
+            f"(row: {str(self.row)}, seat: {str(self.seat)})"
+        )
 
     class Meta:
-        unique_together = ("movie_session", "row", "seat"),
+        unique_together = (("movie_session", "row", "seat"),)
         ordering = ["row", "seat"]

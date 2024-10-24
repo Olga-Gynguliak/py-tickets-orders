@@ -1,14 +1,15 @@
 from django.db import transaction
 from rest_framework import serializers
 
-from cinema.models import (Genre,
-                           Actor,
-                           CinemaHall,
-                           Movie,
-                           MovieSession,
-                           Order,
-                           Ticket,
-                           )
+from cinema.models import (
+    Genre,
+    Actor,
+    CinemaHall,
+    Movie,
+    MovieSession,
+    Order,
+    Ticket,
+)
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -36,9 +37,7 @@ class MovieSerializer(serializers.ModelSerializer):
 
 
 class MovieListSerializer(MovieSerializer):
-    genres = serializers.SlugRelatedField(
-        many=True, read_only=True, slug_field="name"
-    )
+    genres = serializers.SlugRelatedField(many=True, read_only=True, slug_field="name")
     actors = serializers.SlugRelatedField(
         many=True, read_only=True, slug_field="full_name"
     )
@@ -61,9 +60,7 @@ class MovieSessionSerializer(serializers.ModelSerializer):
 
 class MovieSessionListSerializer(MovieSessionSerializer):
     movie_title = serializers.CharField(source="movie.title", read_only=True)
-    cinema_hall_name = serializers.CharField(
-        source="cinema_hall.name", read_only=True
-    )
+    cinema_hall_name = serializers.CharField(source="cinema_hall.name", read_only=True)
     cinema_hall_capacity = serializers.IntegerField(
         source="cinema_hall.capacity", read_only=True
     )
@@ -84,9 +81,7 @@ class MovieSessionListSerializer(MovieSessionSerializer):
 class TicketSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         data = super(TicketSerializer, self).validate(attrs=attrs)
-        Ticket.validate_ticket(
-            attrs["row"], attrs["seat"], attrs["movie_session"]
-        )
+        Ticket.validate_ticket(attrs["row"], attrs["seat"], attrs["movie_session"])
         return data
 
     class Meta:
@@ -107,9 +102,7 @@ class TicketSeatSerializer(TicketSerializer):
 class MovieSessionDetailSerializer(MovieSessionSerializer):
     movie = MovieListSerializer(many=False, read_only=True)
     cinema_hall = CinemaHallSerializer(many=False, read_only=True)
-    taken_places = TicketSeatSerializer(
-        source="tickets", many=True, read_only=True
-    )
+    taken_places = TicketSeatSerializer(source="tickets", many=True, read_only=True)
 
     class Meta:
         model = MovieSession
@@ -117,9 +110,7 @@ class MovieSessionDetailSerializer(MovieSessionSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
-    tickets = TicketSeatSerializer(
-        many=True, read_only=False, allow_empty=False
-    )
+    tickets = TicketSeatSerializer(many=True, read_only=False, allow_empty=False)
 
     class Meta:
         model = Order
